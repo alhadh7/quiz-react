@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css'
-import Quiz from './components/quiz';
+import Quiz from './components/Quiz';
 
 function App() {
 
