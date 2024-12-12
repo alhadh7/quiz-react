@@ -1,0 +1,8 @@
+#root {
+  text-align: center;
+}
+
+body{
+display: flex;
+justify-content: center;
+}

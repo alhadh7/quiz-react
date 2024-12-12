@@ -1,0 +1,11 @@
+.container{
+    width: 36rem !important;
+}
+
+.heading{
+font-size: medium;
+}
+
+.btn-link{
+    text-decoration: none !important;
+}
