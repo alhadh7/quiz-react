@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Quiz.css'
+
 const Quiz = () => {
   const [token, setToken] = useState(null);
   const [question, setQuestion] = useState(null);
@@ -62,8 +62,12 @@ const Quiz = () => {
   };
 
   const fetchQuestion = async () => {
+    if (loading) return; // Prevent multiple fetches while loading
+    
     try {
       setLoading(true);
+      setFeedback(null); // Clear any existing feedback
+      
       const response = await fetch('https://qa-backend-v2gq.onrender.com/api/question/', {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -76,7 +80,6 @@ const Quiz = () => {
         setQuestion(null);
       } else if (response.ok) {
         setQuestion(data);
-        setFeedback(null);
         setQuizCompleted(false);
       } else {
         setError('Failed to fetch question.');
@@ -89,6 +92,8 @@ const Quiz = () => {
   };
 
   const submitAnswer = async (option) => {
+    if (loading || !question) return; // Prevent multiple submissions
+    
     try {
       setLoading(true);
       const response = await fetch('https://qa-backend-v2gq.onrender.com/api/submit/', {
@@ -104,14 +109,16 @@ const Quiz = () => {
       });
       const data = await response.json();
       
+      // Update answered questions set
       setAnsweredQuestions(prev => new Set([...prev, question.id]));
 
+      // Set feedback based on response
       if (data.is_correct) {
         setFeedback({
           type: 'success',
           message: 'Correct!',
         });
-      }  else {
+      } else {
         const correctOptionText = question[`option_${data.correct_option.toLowerCase()}`];
         setFeedback({
           type: 'danger',
@@ -119,11 +126,9 @@ const Quiz = () => {
         });
       }
       
-      getSessionDetails();
+      // Update score
+      await getSessionDetails();
       
-      // setTimeout(() => {
-      //   fetchQuestion();
-      // }, 5000);
     } catch (err) {
       setError('Failed to submit answer.');
     } finally {
@@ -152,6 +157,7 @@ const Quiz = () => {
     setError('');
   };
 
+  // Fetch session details when token changes
   useEffect(() => {
     if (token) {
       getSessionDetails();
@@ -160,15 +166,12 @@ const Quiz = () => {
 
   return (
     <div className="container mb-5 w-100">
-             {token ? (
-                       <div className="heading pb-4">
-                        <h2>QA Session</h2>
-                    </div>
-             ):(
-
-                <div className="cs"></div>
-
-             )}
+      {token && (
+        <div className="heading pb-4">
+          <h2>QA Session</h2>
+        </div>
+      )}
+      
       <div className="row justify-content-center">
         <div className="col-md-8">
           {!token ? (
@@ -219,36 +222,44 @@ const Quiz = () => {
               </div>
             </div>
           ) : (
-            
             <div>
-                  {!quizCompleted && (
-              <div className="card mb-4">
-                <div className="card-body">
- 
-                  <div className="d-flex justify-content-between align-items-center">
-                    
-                      <button
-                        onClick={fetchQuestion}
-                        className="btn btn-primary"
-                        disabled={loading}
-                      >
-                        {loading ? 'Loading...' : 'Get Question'}
-                      </button>
-           
-                    {score && (
-                      <div className="text-end">
-                        <p className="h5 mb-0">
-                          Score: {score.correct_answers}/{score.total_questions}
-                        </p>
-                      </div>
-                    )}
+              {!quizCompleted && (
+                <div className="card mb-4">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center">
+                      {!question && !feedback && (
+                        <button
+                          onClick={fetchQuestion}
+                          className="btn btn-primary"
+                          disabled={loading}
+                        >
+                          {loading ? 'Loading...' : 'Get Question'}
+                        </button>
+                      )}
+                      {score && (
+                        <div className="text-end">
+                          <p className="h5 mb-0">
+                            Score: {score.correct_answers}/{score.total_questions}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-              {!quizCompleted && feedback && (
-                <div className={`alert alert-${feedback.type}`} role="alert">
+              )}
+
+              {feedback && (
+                <div className={`alert alert-${feedback.type} mb-3`} role="alert">
                   {feedback.message}
+                  <div className="mt-3">
+                    <button 
+                      onClick={fetchQuestion} 
+                      className="btn btn-primary"
+                      disabled={loading}
+                    >
+                      Next Question
+                    </button>
+                  </div>
                 </div>
               )}
 
