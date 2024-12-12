@@ -226,7 +226,7 @@ const Quiz = () => {
               {!quizCompleted && (
                 <div className="card mb-4">
                   <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex justify-content-between align-items-center x">
                       {!question && !feedback && (
                         <button
                           onClick={fetchQuestion}
